@@ -19,6 +19,6 @@ jobs:
 
       - run: python agent.py
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
           FRIEND_PHONE_NUMBER: ${{ secrets.FRIEND_PHONE_NUMBER }}
