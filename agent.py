@@ -49,4 +49,34 @@ Write only the text message, nothing else."""
     body = {
         "model": "llama3-8b-8192",
         "messages": [{"role": "user", "content": prompt}],
-        "​​​​​​​​​​​​​​​​
+        "max_tokens": 200
+    }
+    response = requests.post(url, headers=headers, json=body)
+    response.raise_for_status()
+    return response.json()["choices"][0]["message"]["content"].strip()
+
+
+def send_text(message: str) -> None:
+    response = requests.post("https://textbelt.com/text", data={
+        "phone": FRIEND_PHONE_NUMBER,
+        "message": message,
+        "key": "textbelt",
+    })
+    result = response.json()
+    if result.get("success"):
+        print(f"[{datetime.now()}] Message sent! ID: {result.get('textId')}")
+    else:
+        raise RuntimeError(f"TextBelt error: {result.get('error')}")
+
+
+def run():
+    print(f"[{datetime.now()}] Running daily AI article agent...")
+    article    = search_ai_article()
+    print(f"  Found: {article['title']}")
+    commentary = generate_commentary(article)
+    print(f"  Message:\n{commentary}\n")
+    send_text(commentary)
+
+
+if __name__ == "__main__":
+    run()
