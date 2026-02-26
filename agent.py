@@ -34,7 +34,7 @@ def generate_commentary(article):
     }
     content = "You are texting your friend who loves baseball about an AI article. Write 2-3 casual sentences using a baseball analogy. End with the link on its own line. Do not start with Hey. Article: " + str(article["title"]) + ". Link: " + str(article["link"])
     body = {
-        "model": "llama3-8b-8192",
+        "model": "llama-3.3-70b-versatile",
         "messages": [{"role": "user", "content": content}],
         "max_tokens": 200
     }
