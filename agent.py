@@ -7,6 +7,9 @@ load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 SERPER_API_KEY = os.getenv("SERPER_API_KEY")
 FRIEND_PHONE_NUMBER = os.getenv("FRIEND_PHONE_NUMBER")
+FRIEND_PHONE_NUMBER_2 = os.getenv("FRIEND_PHONE_NUMBER_2")
+FRIEND_PHONE_NUMBER_3 = os.getenv("FRIEND_PHONE_NUMBER_3")
+TEXTBELT_API_KEY = os.getenv("TEXTBELT_API_KEY")
 
 
 def search_ai_article():
@@ -43,17 +46,17 @@ def generate_commentary(article):
     return response.json()["choices"][0]["message"]["content"]
 
 
-def send_text(message):
+def send_text(phone, message):
     response = requests.post("https://textbelt.com/text", data={
-        "phone": FRIEND_PHONE_NUMBER,
+        "phone": phone,
         "message": message,
-        "key": "textbelt",
+        "key": TEXTBELT_API_KEY,
     })
     result = response.json()
     if result.get("success"):
-        print("Message sent!")
+        print("Message sent to " + phone + "!")
     else:
-        raise RuntimeError("TextBelt error: " + str(result.get("error")))
+        raise RuntimeError("TextBelt error for " + phone + ": " + str(result.get("error")))
 
 
 def run():
@@ -62,7 +65,10 @@ def run():
     print("Found: " + article["title"])
     commentary = generate_commentary(article)
     print("Message: " + commentary)
-    send_text(commentary)
+    numbers = [FRIEND_PHONE_NUMBER, FRIEND_PHONE_NUMBER_2, FRIEND_PHONE_NUMBER_3]
+    for number in numbers:
+        if number:
+            send_text(number, commentary)
 
 
 if __name__ == "__main__":
