@@ -30,6 +30,19 @@ def generate_commentary(articles):
         "Authorization": "Bearer " + str(GROQ_API_KEY),
         "Content-Type": "application/json"
     }
-    stories = ""
-    for i, a in enumerate(articles):
-        stories = stories + str(i+1
+    a1 = str(articles[0].get("title", "")) + ": " + str(articles[0].get("snippet", ""))
+    a2 = str(articles[1].get("title", "")) + ": " + str(articles[1].get("snippet", ""))
+    a3 = str(articles[2].get("title", "")) + ": " + str(articles[2].get("snippet", ""))
+    content = "You are texting your friend who loves baseball about 3 AI news stories. For each story write exactly 2 casual sentences using a baseball analogy. Number each story 1, 2, 3. No links. Keep the whole message under 300 characters total. Stories: 1. " + a1 + " 2. " + a2 + " 3. " + a3
+    body = {
+        "model": "llama-3.3-70b-versatile",
+        "messages": [{"role": "user", "content": content}],
+        "max_tokens": 300
+    }
+    response = requests.post(url, headers=headers, json=body)
+    response.raise_for_status()
+    return response.json()["choices"][0]["message"]["content"]
+
+
+def send_text(phone, message):
+    response = requests.post("https:/
