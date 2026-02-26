@@ -48,7 +48,7 @@ def search_ai_article() -> dict:
 
 def generate_commentary(article: dict) -> str:
     """Use Gemini (free) to write a short baseball-flavored text message."""
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
     prompt = f"""You are texting your friend who is a huge baseball fan about a cool AI news article.
 Write a SHORT (2-3 sentences max) fun text message that:
 - Uses a baseball analogy, metaphor, or reference to explain why this AI news is interesting
