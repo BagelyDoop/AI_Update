@@ -1,0 +1,30 @@
+name: Daily AI Article Texter
+
+on:
+schedule:
+- cron: “0 14 * * *”  # 9am EST (14:00 UTC) — adjust to your timezone
+workflow_dispatch:        # allows manual trigger from GitHub UI (great for testing)
+
+jobs:
+send-article:
+runs-on: ubuntu-latest
+steps:
+- name: Checkout repo
+uses: actions/checkout@v4
+
+```
+  - name: Set up Python
+    uses: actions/setup-python@v5
+    with:
+      python-version: "3.11"
+
+  - name: Install dependencies
+    run: pip install requests python-dotenv
+
+  - name: Run agent
+    env:
+      GEMINI_API_KEY:      ${{ secrets.GEMINI_API_KEY }}
+      SERPER_API_KEY:      ${{ secrets.SERPER_API_KEY }}
+      FRIEND_PHONE_NUMBER: ${{ secrets.FRIEND_PHONE_NUMBER }}
+    run: python agent.py
+```
