@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 from dotenv import load_dotenv
 
@@ -14,9 +15,19 @@ FRIEND_PHONE_NUMBER_3 = os.getenv("FRIEND_PHONE_NUMBER_3")
 
 
 def require_env(name: str, value: str | None) -> str:
-    if not value or not value.strip():
+    """Raise a clear error if an env var is missing/blank."""
+    if not value or not str(value).strip():
         raise ValueError(f"Missing required env var: {name}")
-    return value.strip()
+    return str(value).strip()
+
+
+def strip_urls(text: str) -> str:
+    """Remove URLs (http/https and www) so Textbelt doesn't reject the message."""
+    text = re.sub(r"https?://\S+", "", text)
+    text = re.sub(r"www\.\S+", "", text)
+    # collapse whitespace after removals
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
 
 
 def search_ai_articles():
@@ -26,6 +37,7 @@ def search_ai_articles():
     url = "https://google.serper.dev/news"
     headers = {"X-API-KEY": serper_key, "Content-Type": "application/json"}
     payload = {"q": "artificial intelligence news", "num": 5, "tbs": "qdr:d"}  # last day
+
     response = requests.post(url, headers=headers, json=payload, timeout=30)
     response.raise_for_status()
 
@@ -37,7 +49,7 @@ def search_ai_articles():
 
 
 def generate_commentary(articles):
-    """Use Groq OpenAI-compatible endpoint to generate a short baseball-analogy text."""
+    """Generate a short baseball-analogy text using Groq OpenAI-compatible endpoint."""
     groq_key = require_env("GROQ_API_KEY", GROQ_API_KEY)
 
     url = "https://api.groq.com/openai/v1/chat/completions"
@@ -60,14 +72,15 @@ def generate_commentary(articles):
     body = {
         "model": "llama-3.3-70b-versatile",
         "messages": [{"role": "user", "content": content}],
-        "max_tokens": 120,  # tokens != chars; keep small to encourage brevity
+        "max_tokens": 120,   # encourage brevity
         "temperature": 0.7,
     }
 
     response = requests.post(url, headers=headers, json=body, timeout=45)
     response.raise_for_status()
 
-    return response.json()["choices"][0]["message"]["content"].strip()
+    text = response.json()["choices"][0]["message"]["content"].strip()
+    return text
 
 
 def send_text(phone: str, message: str):
@@ -76,6 +89,7 @@ def send_text(phone: str, message: str):
 
     url = "https://textbelt.com/text"
     payload = {"phone": phone, "message": message, "key": textbelt_key}
+
     response = requests.post(url, data=payload, timeout=30)
     response.raise_for_status()
 
@@ -87,18 +101,32 @@ def send_text(phone: str, message: str):
 
 def main():
     # Collect phone numbers that are set
-    phones = [p for p in [FRIEND_PHONE_NUMBER, FRIEND_PHONE_NUMBER_2, FRIEND_PHONE_NUMBER_3] if p and p.strip()]
+    phones = [
+        p.strip()
+        for p in [FRIEND_PHONE_NUMBER, FRIEND_PHONE_NUMBER_2, FRIEND_PHONE_NUMBER_3]
+        if p and str(p).strip()
+    ]
     if not phones:
         raise ValueError("No friend phone numbers set. Add FRIEND_PHONE_NUMBER env vars.")
 
     articles = search_ai_articles()
+
     message = generate_commentary(articles)
 
-    for phone in phones:
-        send_text(phone.strip(), message)
+    # Enhancement: remove any URLs (Textbelt blocks URL texts unless verified)
+    message = strip_urls(message)
 
-    print("✅ Sent message to:", ", ".join([p.strip() for p in phones]))
-    print("Message:\n", message)
+    # Enhancement: fail early if something still looks like a URL
+    if "http" in message.lower() or "www." in message.lower():
+        raise ValueError(f"Message still contains a URL after stripping: {message}")
+
+    # Helpful logging for Actions
+    print("✅ Generated message:", message)
+
+    for phone in phones:
+        send_text(phone, message)
+
+    print("✅ Sent message to:", ", ".join(phones))
 
 
 if __name__ == "__main__":
